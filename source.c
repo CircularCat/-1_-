@@ -59,9 +59,12 @@ Cog_link cogs;//课程成绩链表
 int read_line(char str[], int n);//按行读取字符并以字符串形式储存
 int init(void);//初始化链表（置空，加头结点）
 int choose(void);//选择功能
-int pri_stu(Stu_link* stus);//打印学生链表
+int pri_stu(Stu_link *stus);//打印学生链表
+int pri_cou(Cou_link *cous);//打印课程链表
 int sor_stu_sno(Stu_link *stus);//将学生链表根据学号排序，输入为链表结构地址
+int sor_cou_cno(Cou_link *cous);//课程信息排序
 int fun4(void);//选4时
+int fun5(void);//选5时
 
 
 //函数实现
@@ -99,7 +102,7 @@ int choose(void) {
 	return cho;
 }
 
-int pri_stu(Stu_link* stus) {
+int pri_stu(Stu_link *stus) {
 	Stu_node *p = stus->head;
 	if (NULL == p) {
 		printf("链表故障\n");
@@ -111,6 +114,24 @@ int pri_stu(Stu_link* stus) {
 			p->data.sname,
 			p->data.sex,
 			p->data.major);
+
+		p = p->next;
+	}
+
+	return 1;
+}
+
+int pri_cou(Cou_link *cous) {
+	Cou_node *p = cous->head;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+	while (p->next != NULL) {
+		printf("课程号:%d\t课程名%s\t课时%d\n",
+			p->data.cno,
+			p->data.cname,
+			p->data.classHours);
 
 		p = p->next;
 	}
@@ -149,6 +170,37 @@ int sor_stu_sno(Stu_link *stus) {
 	return 1;
 }
 
+int sor_cou_cno(Cou_link *cous) {
+	Cou_node *p = cous->head, *q = p->next;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+	if ((0 == cous->size) || (1 == cous->size)) {//空链表或者只有一个元素
+		return 1;
+	}
+	//检测、交换
+	S_cou temp;
+	int i = 0, j = 0;
+	for (i = 0; i < cous->size - 1; i++) {
+		for (j = 0; j < cous->size - i - 1; j++) {
+			if (p->data.cno > q->data.cno) {
+				temp = q->data;
+				q->data = p->data;
+				p->data = temp;
+			}
+			p = q;
+			q = q->next;
+		}
+		p = cous->head;
+		q = p->next;
+	}
+
+
+
+	return 1;
+}
+
 int fun4(void) {
 	//读取文件并建立链表
 	FILE *fp = fopen("student.txt", "r");
@@ -174,12 +226,36 @@ int fun4(void) {
 	return 1;
 }
 
+int fun5(void) {
+	//读取文件并建立链表
+	FILE *fp = fopen("course.txt", "r");
+	if (NULL == fp) {//错误情况处理
+		printf("打开课程信息文件失败\n");
+		return 0;
+	}
+	while (!feof(fp)) {
+		Cou_node *new_cou = (Cou_node*)malloc(sizeof(Cou_node));//新结点
+		memset(new_cou, 0, sizeof(Cou_node));
+		fscanf(fp, "%d", &new_cou->data.cno);
+		fscanf(fp, " \t%s", new_cou->data.cname);
+		fscanf(fp, " \t%d\n", &new_cou->data.classHours);
+		new_cou->next = cous.head;
+		cous.head = new_cou;
+		cous.size++;
+	}
+	printf("课程信息链表已建立，共%d条记录\n", cous.size);
+	//排序并输出
+	sor_cou_cno(&cous);
+	pri_cou(&cous);
+	return 1;
+}
+
 int menu(void) {
 		printf("---------------------------------------------------------------\n");
 		printf("                         学生课程成绩查询系统\n");
 
 		printf("4.建立学生链表\n");
-		//printf("5.建立课程链表\n");
+		printf("5.建立课程链表\n");
 		//printf("6.建立成绩链表\n");
 		//printf("7.查询所有信息\n");
 		//printf("8.查询指定成绩\n");
@@ -214,6 +290,10 @@ int main(void)
 		}
 		if (4 == cho) {
 			fun4();
+			break;
+		}
+		if (5 == cho) {
+			fun5();
 			break;
 		}
 
