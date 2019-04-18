@@ -49,11 +49,28 @@ typedef struct cog_link {//课程成绩链表
 	int size;
 }Cog_link;
 
+typedef struct {//所有信息结构
+	int sno;
+	char sname[MAX_LEN];
+	char major[MAX_LEN];
+	char cname[MAX_LEN];
+	int score;
+}S_all;
+typedef struct all_node{//所有信息的结点
+	S_all data;
+	struct all_node *next;
+}All_node;
+typedef struct all_link{//所有信息链表
+	All_node *head;
+	int size;
+}All_link;
+
 
 //定义要用的全局链表
 Stu_link stus;//学生信息链表
 Cou_link cous;//课程信息链表
 Cog_link cogs;//课程成绩链表
+All_link alls;//所有信息链表
 
 //函数声明
 int read_line(char str[], int n);//按行读取字符并以字符串形式储存
@@ -62,12 +79,14 @@ int choose(void);//选择功能
 int pri_stu(Stu_link *stus);//打印学生链表
 int pri_cou(Cou_link *cous);//打印课程链表
 int pri_cog(Cog_link *cogs);//打印课程成绩信息链表
+int pri_all(All_link *alls);//打印所有信息链表
 int sor_stu_sno(Stu_link *stus);//将学生链表根据学号排序，输入为链表结构地址
 int sor_cou_cno(Cou_link *cous);//课程信息排序
 int sor_cog_sno_cno(Cog_link *cogs);//课程成绩信息排序
 int fun4(void);//选4时
 int fun5(void);//选5时
 int fun6(void);//选6时
+int fun7(void);//选7时
 
 
 //函数实现
@@ -95,6 +114,9 @@ int init(void) {
 	Cog_node *new_cog = (Cog_node*)malloc(sizeof(Cog_node));
 	memset(new_cog, 0, sizeof(Cog_node));
 	cogs.head = new_cog;
+	All_node *new_all = (All_node*)malloc(sizeof(All_node));
+	memset(new_all, 0, sizeof(All_node));
+	alls.head = new_all;
 
 	return 1;
 }
@@ -153,6 +175,27 @@ int pri_cog(Cog_link *cogs) {
 			p->data.sno,
 			p->data.cno,
 			p->data.score);
+
+		p = p->next;
+	}
+
+	return 1;
+}
+
+int pri_all(All_link *alls) {
+	All_node *p = alls->head;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+	while (p->next != NULL) {
+		printf("学号:%d\t姓名:%s\t专业:%s\t课程名称%s\t成绩%d\n",
+			p->data.sno,
+			p->data.sname,
+			p->data.major,
+			p->data.cname,
+			p->data.score
+			);
 
 		p = p->next;
 	}
@@ -341,6 +384,62 @@ int fun6(void) {
 	return 1;
 }
 
+int fun7(void) {
+	fun4();//建立三个链表
+	fun5();
+	fun6();
+
+	Stu_node *p = stus.head;//定义操作四个链表的指针
+	Cou_node *q = cous.head;
+	Cog_node *r = cogs.head;
+	All_node *s = alls.head;
+
+	while (NULL != p->next) {//遍历学生信息链表
+		while (1) {
+			//进行到一个学生的所有课程信息都录入完成
+			All_node *new_all = (All_node*)malloc(sizeof(All_node));//分配结点空间
+			if (NULL == new_all) {
+				printf("分配空间失败\n");
+				return 0;
+			}
+			memset(new_all, 0, sizeof(All_node));
+
+			new_all->data.sno = p->data.sno;//从学生信息链表读入三个信息(该循环中学生信息不变）
+			strcpy(new_all->data.sname, p->data.sname);
+			strcpy(new_all->data.major, p->data.major);
+
+			//搜索并读入一行信息（课程名称和成绩）
+			while ((r->data.sno != p->data.sno) && (NULL != r->next))//根据当前学号找到对应的成绩和课程号
+				r = r->next;
+			if (NULL == r->next)
+				break;
+			new_all->data.score = r->data.score;
+			int cur_cno;
+			cur_cno = r->data.cno;
+			while ((q->data.cno != cur_cno) && (NULL != q->next))//根据当前课程号找到对应的课程名称
+				q = q->next;
+			if (NULL == q->next)
+				break;
+			strcpy(new_all->data.cname, q->data.cname);
+
+			new_all->next = alls.head;//插入结点
+			alls.head = new_all;
+
+			q = q->next;
+			r = r->next;
+			
+		}
+		p = p->next;//下一个学生
+		q = cous.head;
+		r = cogs.head;
+	}
+
+	pri_all(&alls);
+
+
+	return 1;
+}
+
 int menu(void) {
 	printf("---------------------------------------------------------------\n");
 	printf("                         学生课程成绩查询系统\n");
@@ -348,7 +447,7 @@ int menu(void) {
 	printf("4.建立学生链表\n");
 	printf("5.建立课程链表\n");
 	printf("6.建立成绩链表\n");
-	//printf("7.查询所有信息\n");
+	printf("7.查询所有信息\n");
 	//printf("8.查询指定成绩\n");
 	//printf("9.小于60分学生\n");
 	//printf("10.逆序4的链表\n");
@@ -391,6 +490,10 @@ int main(void)
 			fun6();
 			break;
 		}
+		if (7 == cho) {
+			fun7();
+			break;
+		}
 
 		//不保存退出
 		//保存退出
@@ -402,3 +505,4 @@ int main(void)
 
 	return 0;
 }
+
