@@ -15,6 +15,7 @@ typedef struct {//定义单个学生的结构体类型
 typedef struct stu_node {//定义学生结点类型struct_node这里首字母用小写和它的类型名区分开
 	S_stu data;
 	struct stu_node *next;
+	S_cc_node * s_cc;
 }Stu_node;
 typedef struct stu_link {//定义链表结构
 	Stu_node *head;//头指针
@@ -48,6 +49,15 @@ typedef struct cog_link {//课程成绩链表
 	Cog_node *head;
 	int size;
 }Cog_link;
+
+typedef struct {//用来连在学生信息链表的每一个结点后面
+	Cou_node *cou;
+	Cog_node *cog;
+}S_cou_cog;
+typedef struct s_cc_node {//课程和课程成绩结点
+	S_cou_cog data;
+	struct s_cc_node *next;
+}S_cc_node;
 
 
 //定义要用的全局链表
@@ -277,6 +287,11 @@ int fun4(void) {
 	while (!feof(fp)) {
 		Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));//新结点
 		memset(new_stu, 0, sizeof(Stu_node));
+
+		S_cc_node *new_s_cc = (S_cc_node*)malloc(sizeof(S_cc_node));//初始化课程课程成绩链表加空结点
+		memset(new_s_cc, 0, sizeof(S_cc_node));
+		new_stu->s_cc = new_s_cc;
+
 		fscanf(fp, "%d", &new_stu->data.sno);
 		fscanf(fp, " \t%s", new_stu->data.sname);
 		fscanf(fp, " \t%s", new_stu->data.sex);
