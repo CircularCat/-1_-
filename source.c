@@ -67,14 +67,21 @@ typedef struct all_link{//所有信息链表
 	int size;
 }All_link;
 
+typedef struct lin_stk {//定义用来逆序4链表的链栈
+	Stu_node *top;
+	int size;
+}Lin_stk;
+
 
 //定义要用的全局链表
 Stu_link stus;//学生信息链表
+Stu_link rev_stus;//逆序学生信息链表
 Cou_link cous;//课程信息链表
 Cog_link cogs;//课程成绩链表
 All_link alls;//所有信息链表
 All_link apoi_stu_alls;//函数8中存放指定课程号的所有学生的链表
 All_link apoi_stu_alls2;//函数9中存放成绩小于60的学生的链表
+Lin_stk stack;//链栈
 
 //函数声明
 int read_line(char str[], int n);//按行读取字符并以字符串形式储存
@@ -90,12 +97,15 @@ int sor_cog_sno_cno(Cog_link *cogs);//课程成绩信息排序
 int sor_all_sco(All_link *alls);//所有信息排序
 int sor_ap_stu_sco(All_link *ap_alls);//将搜索到的链表按成绩排序
 int wri_all(All_link *alls);//将alls信息链表存入文件
+int push(Stu_node *stu);//进栈
+int pop(Stu_node *dest);//出栈
 int fun4(void);//选4时
 int fun5(void);//选5时
 int fun6(void);//选6时
 int fun7(void);//选7时
 int fun8(void);//选8时
 int fun9(void);//选9时
+int fun10(void);//选10时
 
 
 //函数实现
@@ -115,15 +125,22 @@ int read_line(char str[], int n) {
 
 int init(void) {
 	memset(&stus, 0, sizeof(Stu_link));
+	memset(&rev_stus, 0, sizeof(Stu_link));
 	memset(&cous, 0, sizeof(Cou_link));
 	memset(&cogs, 0, sizeof(Cog_link));
 	memset(&alls, 0, sizeof(All_link));
 	memset(&apoi_stu_alls, 0, sizeof(All_link));
 	memset(&apoi_stu_alls2, 0, sizeof(All_link));
+	memset(&stack, 0, sizeof(Lin_stk));
 
 	Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));
 	memset(new_stu, 0, sizeof(Stu_node));
 	stus.head = new_stu;
+
+	new_stu = (Stu_node*)malloc(sizeof(Stu_node));
+	memset(new_stu, 0, sizeof(Stu_node));
+	rev_stus.head = new_stu;
+
 	Cou_node *new_cou = (Cou_node*)malloc(sizeof(Cou_node));
 	memset(new_cou, 0, sizeof(Cou_node));
 	cous.head = new_cou;
@@ -142,6 +159,10 @@ int init(void) {
 	new_all = (All_node*)malloc(sizeof(All_node));
 	memset(new_all, 0, sizeof(All_node));
 	apoi_stu_alls2.head = new_all;
+
+	new_stu = (Stu_node*)malloc(sizeof(Stu_node));
+	memset(new_stu, 0, sizeof(Stu_node));
+	stack.top = new_stu;
 
 	return 1;
 }
@@ -454,6 +475,33 @@ int wri_all(All_link *alls) {
 	return 1;
 }
 
+int push(Stu_node *stu) {
+	Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));
+	if (NULL == new_stu) {
+		printf("申请内存失败，无法入栈\n");
+		return 0;
+	}
+	memset(new_stu, 0, sizeof(Stu_node));
+	new_stu->data = stu->data;
+	new_stu->next = stack.top;
+	stack.top = new_stu;
+	stack.size++;
+	return 1;
+}
+
+int pop(Stu_node *dest) {
+	if (stack.size <= 0) {
+		printf("下溢啦！\n");
+		return 0;
+	}
+	dest->data = stack.top->data;
+	Stu_node *p = stack.top;
+	stack.top = stack.top->next;
+	free(p);
+	stack.size--;
+	return 1;
+}
+
 int fun4(void) {
 	//读取文件并建立链表
 	FILE *fp = fopen("student.txt", "r");
@@ -658,6 +706,50 @@ int fun9(void) {
 	return 1;
 }
 
+int fun10(void) {
+	fun4();
+	Stu_node *p = stus.head;
+	while (NULL != p->next) {
+		push(p);
+		p = p->next;
+	}
+	int check = 0;
+	
+	
+	do {
+		Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));
+		memset(new_stu, 0, sizeof(Stu_node));
+		check = pop(new_stu);
+
+		p = rev_stus.head;
+		if (0 == check)
+			break;
+		if (0 == rev_stus.size) {//插到空结点前面
+			new_stu->next = rev_stus.head;
+			rev_stus.head = new_stu;
+		}
+		else if (1 == rev_stus.size) {
+			new_stu->next = p->next;
+			p->next = new_stu;
+		}
+		else {
+			while (NULL != p->next->next)//p移动到倒数第二个结点处
+				p = p->next;
+			new_stu->next = p->next;
+			p->next = new_stu;
+		}
+		
+		
+		rev_stus.size++;
+	} while (check != 0);
+
+	printf("倒置学生信息链表已生成，共%d条信息\n", rev_stus.size);
+	pri_stu(&rev_stus);
+
+	return 1;
+
+}
+
 
 
 int menu(void) {
@@ -670,7 +762,7 @@ int menu(void) {
 	printf("7.查询所有信息\n");
 	printf("8.查询指定成绩\n");
 	printf("9.小于60分学生\n");
-	//printf("10.逆序4的链表\n");
+	printf("10.逆序4的链表\n");
 	//printf("11.链式队列做7\n");
 
 	printf("0.退出系统并保存修改\n");
@@ -723,6 +815,10 @@ int main(void)
 			fun9();
 			break;
 		}
+		if (10 == cho) {
+			fun10();
+			break;
+		}
 
 		//不保存退出
 		//保存退出
@@ -734,4 +830,5 @@ int main(void)
 
 	return 0;
 }
+
 
