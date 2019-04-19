@@ -83,6 +83,8 @@ int pri_all(All_link *alls);//打印所有信息链表
 int sor_stu_sno(Stu_link *stus);//将学生链表根据学号排序，输入为链表结构地址
 int sor_cou_cno(Cou_link *cous);//课程信息排序
 int sor_cog_sno_cno(Cog_link *cogs);//课程成绩信息排序
+int sor_all_sco(All_link *alls);//所有信息排序
+int wri_all(FILE *fp, All_link *alls);//将alls信息链表存入文件
 int fun4(void);//选4时
 int fun5(void);//选5时
 int fun6(void);//选6时
@@ -310,6 +312,66 @@ int sor_cog_sno_cno(Cog_link *cogs) {
 	return 1;
 }
 
+int sor_all_sco(All_link *alls) {//降序排序
+	All_node *p = alls->head, *q = p->next;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+	if ((0 == alls->size) || (1 == alls->size)) {//空链表或者只有一个元素
+		if (0 == alls->size)
+			printf("链表为空\n");
+		if (1 == alls->size)
+			printf("链表只有一个结点，无需排序\n");
+		return 1;
+	}
+	//检测、交换
+	S_all temp;
+	int i = 0, j = 0;
+	for (i = 0; i < alls->size - 1; i++) {
+		for (j = 0; j < alls->size - i - 1; j++) {
+			if (p->data.score < q->data.score) {
+				temp = q->data;
+				q->data = p->data;
+				p->data = temp;
+			}
+			p = q;
+			q = q->next;
+		}
+		p = alls->head;
+		q = p->next;
+	}
+
+	printf("学生成绩链表建立完毕，共%d条信息\n\n", alls->size);
+
+	return 1;
+}
+
+int wri_all(FILE *fp, All_link *alls) {
+	All_node *p = alls->head;
+	int written = 0;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+
+	while (NULL != p->next) {
+		fprintf(fp, "%d\t%s\t%s\t%s\t%d\n",
+			p->data.sno,
+			p->data.sname,
+			p->data.major,
+			p->data.cname,
+			p->data.score
+		);
+
+		written++;
+
+		p = p->next;
+	}
+	printf("写入文件成功，写入%d条信息\n\n", written);
+	return 1;
+}
+
 int fun4(void) {
 	//读取文件并建立链表
 	FILE *fp = fopen("student.txt", "r");
@@ -328,7 +390,7 @@ int fun4(void) {
 		stus.head = new_stu;
 		stus.size++;
 	}
-	printf("学生信息链表已建立，共%d条记录\n", stus.size);
+	printf("学生信息链表已建立，共%d条记录\n\n", stus.size);
 	//排序并输出
 	sor_stu_sno(&stus);
 	pri_stu(&stus);
@@ -352,7 +414,7 @@ int fun5(void) {
 		cous.head = new_cou;
 		cous.size++;
 	}
-	printf("课程信息链表已建立，共%d条记录\n", cous.size);
+	printf("课程信息链表已建立，共%d条记录\n\n", cous.size);
 	//排序并输出
 	sor_cou_cno(&cous);
 	pri_cou(&cous);
@@ -376,7 +438,7 @@ int fun6(void) {
 		cogs.head = new_cog;
 		cogs.size++;
 	}
-	printf("课程成绩信息链表已建立，共%d条记录\n", cogs.size);
+	printf("课程成绩信息链表已建立，共%d条记录\n\n", cogs.size);
 	//排序并输出
 	sor_cog_sno_cno(&cogs);
 	pri_cog(&cogs);
@@ -425,6 +487,8 @@ int fun7(void) {
 			new_all->next = alls.head;//插入结点
 			alls.head = new_all;
 
+			alls.size++;//4.19.9:32增加
+
 			q = q->next;
 			r = r->next;
 			
@@ -433,6 +497,17 @@ int fun7(void) {
 		q = cous.head;
 		r = cogs.head;
 	}
+	sor_all_sco(&alls);
+
+	//写入文件
+	FILE *fp = fopen("studentGrade.txt", "r");//确保文件存在，不存在则创建一个
+	if (NULL == fp)
+		printf("studentGrade.txt文件不存在，为您新建一个\n");
+	fclose(fp);
+
+	fp = fopen("studentGrade.txt", "w");
+	wri_all(fp, &alls);
+	fclose(fp);
 
 	pri_all(&alls);
 
@@ -505,4 +580,3 @@ int main(void)
 
 	return 0;
 }
-
