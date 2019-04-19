@@ -74,6 +74,7 @@ Cou_link cous;//课程信息链表
 Cog_link cogs;//课程成绩链表
 All_link alls;//所有信息链表
 All_link apoi_stu_alls;//函数8中存放指定课程号的所有学生的链表
+All_link apoi_stu_alls2;//函数9中存放成绩小于60的学生的链表
 
 //函数声明
 int read_line(char str[], int n);//按行读取字符并以字符串形式储存
@@ -94,6 +95,7 @@ int fun5(void);//选5时
 int fun6(void);//选6时
 int fun7(void);//选7时
 int fun8(void);//选8时
+int fun9(void);//选9时
 
 
 //函数实现
@@ -117,6 +119,7 @@ int init(void) {
 	memset(&cogs, 0, sizeof(Cog_link));
 	memset(&alls, 0, sizeof(All_link));
 	memset(&apoi_stu_alls, 0, sizeof(All_link));
+	memset(&apoi_stu_alls2, 0, sizeof(All_link));
 
 	Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));
 	memset(new_stu, 0, sizeof(Stu_node));
@@ -135,6 +138,10 @@ int init(void) {
 	new_all = (All_node*)malloc(sizeof(All_node));
 	memset(new_all, 0, sizeof(All_node));
 	apoi_stu_alls.head = new_all;
+
+	new_all = (All_node*)malloc(sizeof(All_node));
+	memset(new_all, 0, sizeof(All_node));
+	apoi_stu_alls2.head = new_all;
 
 	return 1;
 }
@@ -619,6 +626,40 @@ int fun8(void) {
 	return 1;
 }
 
+int fun9(void) {
+	fun7();
+
+	printf("\n");
+
+	int key = 60;
+
+	All_node *p = alls.head;
+	while (NULL != p->next) {
+		if (p->data.score < key) {
+			All_node *new_all = (All_node*)malloc(sizeof(All_node));
+			memset(new_all, 0, sizeof(All_node));
+
+			new_all->data = p->data;
+
+			new_all->next = apoi_stu_alls2.head;//插入结点
+			apoi_stu_alls2.head = new_all;
+
+			apoi_stu_alls2.size++;
+		}
+
+		p = p->next;
+	}
+	printf("成绩低于%d的学生成绩信息链表已经建立，共%d条信息\n\n", key, apoi_stu_alls2.size);
+
+	sor_ap_stu_sco(&apoi_stu_alls2);
+
+	pri_all(&apoi_stu_alls2);
+
+	return 1;
+}
+
+
+
 int menu(void) {
 	printf("---------------------------------------------------------------\n");
 	printf("                         学生课程成绩查询系统\n");
@@ -628,7 +669,7 @@ int menu(void) {
 	printf("6.建立成绩链表\n");
 	printf("7.查询所有信息\n");
 	printf("8.查询指定成绩\n");
-	//printf("9.小于60分学生\n");
+	printf("9.小于60分学生\n");
 	//printf("10.逆序4的链表\n");
 	//printf("11.链式队列做7\n");
 
@@ -676,6 +717,10 @@ int main(void)
 		}
 		if (8 == cho) {
 			fun8();
+			break;
+		}
+		if (9 == cho) {
+			fun9();
 			break;
 		}
 
