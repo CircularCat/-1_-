@@ -53,8 +53,10 @@ typedef struct {//所有信息结构
 	int sno;
 	char sname[MAX_LEN];
 	char major[MAX_LEN];
+	int cno;
 	char cname[MAX_LEN];
 	int score;
+	
 }S_all;
 typedef struct all_node{//所有信息的结点
 	S_all data;
@@ -71,6 +73,7 @@ Stu_link stus;//学生信息链表
 Cou_link cous;//课程信息链表
 Cog_link cogs;//课程成绩链表
 All_link alls;//所有信息链表
+All_link apoi_stu_alls;//函数8中存放指定课程号的所有学生的链表
 
 //函数声明
 int read_line(char str[], int n);//按行读取字符并以字符串形式储存
@@ -84,11 +87,13 @@ int sor_stu_sno(Stu_link *stus);//将学生链表根据学号排序，输入为�
 int sor_cou_cno(Cou_link *cous);//课程信息排序
 int sor_cog_sno_cno(Cog_link *cogs);//课程成绩信息排序
 int sor_all_sco(All_link *alls);//所有信息排序
-int wri_all(FILE *fp, All_link *alls);//将alls信息链表存入文件
+int sor_ap_stu_sco(All_link *ap_alls);//将搜索到的链表按成绩排序
+int wri_all(All_link *alls);//将alls信息链表存入文件
 int fun4(void);//选4时
 int fun5(void);//选5时
 int fun6(void);//选6时
 int fun7(void);//选7时
+int fun8(void);//选8时
 
 
 //函数实现
@@ -107,6 +112,12 @@ int read_line(char str[], int n) {
 }
 
 int init(void) {
+	memset(&stus, 0, sizeof(Stu_link));
+	memset(&cous, 0, sizeof(Cou_link));
+	memset(&cogs, 0, sizeof(Cog_link));
+	memset(&alls, 0, sizeof(All_link));
+	memset(&apoi_stu_alls, 0, sizeof(All_link));
+
 	Stu_node *new_stu = (Stu_node*)malloc(sizeof(Stu_node));
 	memset(new_stu, 0, sizeof(Stu_node));
 	stus.head = new_stu;
@@ -116,9 +127,14 @@ int init(void) {
 	Cog_node *new_cog = (Cog_node*)malloc(sizeof(Cog_node));
 	memset(new_cog, 0, sizeof(Cog_node));
 	cogs.head = new_cog;
+
 	All_node *new_all = (All_node*)malloc(sizeof(All_node));
 	memset(new_all, 0, sizeof(All_node));
 	alls.head = new_all;
+
+	new_all = (All_node*)malloc(sizeof(All_node));
+	memset(new_all, 0, sizeof(All_node));
+	apoi_stu_alls.head = new_all;
 
 	return 1;
 }
@@ -191,10 +207,11 @@ int pri_all(All_link *alls) {
 		return 0;
 	}
 	while (p->next != NULL) {
-		printf("学号:%d\t姓名:%s\t专业:%s\t课程名称%s\t成绩%d\n",
+		printf("学号:%d\t姓名:%s\t专业:%s\t课程号:%d\t课程名称%s\t成绩%d\n",
 			p->data.sno,
 			p->data.sname,
 			p->data.major,
+			p->data.cno,
 			p->data.cname,
 			p->data.score
 			);
@@ -212,6 +229,10 @@ int sor_stu_sno(Stu_link *stus) {
 		return 0;
 	}
 	if ((0 == stus->size) || (1 == stus->size)) {//空链表或者只有一个元素
+		if (0 == stus->size)
+			printf("链表为空\n");
+		if (1 == stus->size)
+			printf("链表只有一个结点，无需排序\n");
 		return 1;
 	}
 	//检测、交换
@@ -243,6 +264,10 @@ int sor_cou_cno(Cou_link *cous) {
 		return 0;
 	}
 	if ((0 == cous->size) || (1 == cous->size)) {//空链表或者只有一个元素
+		if (0 == cous->size)
+			printf("链表为空\n");
+		if (1 == cous->size)
+			printf("链表只有一个结点，无需排序\n");
 		return 1;
 	}
 	//检测、交换
@@ -274,6 +299,10 @@ int sor_cog_sno_cno(Cog_link *cogs) {
 		return 0;
 	}
 	if ((0 == cogs->size) || (1 == cogs->size)) {//空链表或者只有一个元素
+		if (0 == cogs->size)
+			printf("链表为空\n");
+		if (1 == cogs->size)
+			printf("链表只有一个结点，无需排序\n");
 		return 1;
 	}
 	//检测、交换
@@ -347,7 +376,50 @@ int sor_all_sco(All_link *alls) {//降序排序
 	return 1;
 }
 
-int wri_all(FILE *fp, All_link *alls) {
+int sor_ap_stu_sco(All_link *ap_alls) {
+	All_node *p = ap_alls->head, *q = p->next;
+	if (NULL == p) {
+		printf("链表故障\n");
+		return 0;
+	}
+	if ((0 == ap_alls->size) || (1 == ap_alls->size)) {//空链表或者只有一个元素
+		if (0 == ap_alls->size)
+			printf("链表为空\n");
+		if (1 == ap_alls->size)
+			printf("链表只有一个结点，无需排序\n");
+		return 1;
+	}
+	//检测、交换
+	S_all temp;
+	int i = 0, j = 0;
+	for (i = 0; i < ap_alls->size - 1; i++) {
+		for (j = 0; j < ap_alls->size - i - 1; j++) {
+			if (p->data.score < q->data.score) {
+				temp = q->data;
+				q->data = p->data;
+				p->data = temp;
+			}
+			p = q;
+			q = q->next;
+		}
+		p = ap_alls->head;
+		q = p->next;
+	}
+
+	printf("降序排序已完成\n\n");
+
+	return 1;
+}
+
+int wri_all(All_link *alls) {
+	//写入文件
+	FILE *fp = fopen("studentGrade.txt", "r");//确保文件存在，不存在则创建一个
+	if (NULL == fp)
+		printf("studentGrade.txt文件不存在，为您新建一个\n");
+	fclose(fp);
+
+	fp = fopen("studentGrade.txt", "w");
+
 	All_node *p = alls->head;
 	int written = 0;
 	if (NULL == p) {
@@ -356,10 +428,11 @@ int wri_all(FILE *fp, All_link *alls) {
 	}
 
 	while (NULL != p->next) {
-		fprintf(fp, "%d\t%s\t%s\t%s\t%d\n",
+		fprintf(fp, "%d\t%s\t%s\t%d\t%s\t%d\n",
 			p->data.sno,
 			p->data.sname,
 			p->data.major,
+			p->data.cno,
 			p->data.cname,
 			p->data.score
 		);
@@ -369,6 +442,8 @@ int wri_all(FILE *fp, All_link *alls) {
 		p = p->next;
 	}
 	printf("写入文件成功，写入%d条信息\n\n", written);
+
+	fclose(fp);
 	return 1;
 }
 
@@ -478,6 +553,9 @@ int fun7(void) {
 			new_all->data.score = r->data.score;
 			int cur_cno;
 			cur_cno = r->data.cno;
+
+			new_all->data.cno = cur_cno;
+
 			while ((q->data.cno != cur_cno) && (NULL != q->next))//根据当前课程号找到对应的课程名称
 				q = q->next;
 			if (NULL == q->next)
@@ -499,18 +577,44 @@ int fun7(void) {
 	}
 	sor_all_sco(&alls);
 
-	//写入文件
-	FILE *fp = fopen("studentGrade.txt", "r");//确保文件存在，不存在则创建一个
-	if (NULL == fp)
-		printf("studentGrade.txt文件不存在，为您新建一个\n");
-	fclose(fp);
-
-	fp = fopen("studentGrade.txt", "w");
-	wri_all(fp, &alls);
-	fclose(fp);
 
 	pri_all(&alls);
 
+
+	return 1;
+}
+
+int fun8(void) {
+	fun7();
+
+	printf("\n");
+
+	int key;
+	printf("输入要搜索的课程号:");
+	scanf("%d", &key);
+	printf("\n正在搜索中......请稍后~\n\n");
+
+	All_node *p = alls.head;
+	while (NULL != p->next) {
+		if (p->data.cno == key) {
+			All_node *new_all = (All_node*)malloc(sizeof(All_node));
+			memset(new_all, 0, sizeof(All_node));
+
+			new_all->data = p->data;
+
+			new_all->next = apoi_stu_alls.head;//插入结点
+			apoi_stu_alls.head = new_all;
+
+			apoi_stu_alls.size++;
+		}
+
+		p = p->next;
+	}
+	printf("课程号为%d的学生成绩信息链表已经建立，共%d条信息\n\n", key, apoi_stu_alls.size);
+
+	sor_ap_stu_sco(&apoi_stu_alls);
+
+	pri_all(&apoi_stu_alls);
 
 	return 1;
 }
@@ -523,7 +627,7 @@ int menu(void) {
 	printf("5.建立课程链表\n");
 	printf("6.建立成绩链表\n");
 	printf("7.查询所有信息\n");
-	//printf("8.查询指定成绩\n");
+	printf("8.查询指定成绩\n");
 	//printf("9.小于60分学生\n");
 	//printf("10.逆序4的链表\n");
 	//printf("11.链式队列做7\n");
@@ -567,6 +671,11 @@ int main(void)
 		}
 		if (7 == cho) {
 			fun7();
+			wri_all(&alls);
+			break;
+		}
+		if (8 == cho) {
+			fun8();
 			break;
 		}
 
@@ -580,3 +689,4 @@ int main(void)
 
 	return 0;
 }
+
